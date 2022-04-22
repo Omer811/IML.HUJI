@@ -65,7 +65,7 @@ def run_perceptron():
                            "Loss": perc.training_loss})
         fig = px.line(df, x="Iteration", y="Loss",title="Loss per Iterations "
                                                         "for "+n)
-        # fig.show()
+        fig.show()
 
 
 def get_ellipse(mu: np.ndarray, cov: np.ndarray):
@@ -141,45 +141,45 @@ def compare_gaussian_classifiers():
                                  color="black",symbol="x")),
                                  row=1, col=2)
         for i in range(l.classes_.size):
-            e_val,e_vec = np.linalg.eig(l.cov_)
-            e_x,e_y = ellipse(l.mu_[i][0],l.mu_[i][1],a=np.sqrt(e_val[0]),
-                              b=np.sqrt(e_val[1]),ax1 = e_vec[:,0],ax2=e_vec[:,1])
-            fig.add_trace(go.Line(x=e_x, y=e_y),row=1, col=1)
+            # e_val,e_vec = np.linalg.eig(l.cov_)
+            # e_x,e_y = ellipse(l.mu_[i][0],l.mu_[i][1],a=np.sqrt(e_val[0]),
+            #                   b=np.sqrt(e_val[1]),ax1 = e_vec[:,0],ax2=e_vec[:,1])
+            fig.add_trace(get_ellipse(l.mu_[i],l.cov_),row=1, col=1)
         for i in range(g.classes_.size):
-            e_val,e_vec = np.linalg.eig(g.vars_[i])
-            e_x,e_y = ellipse(g.mu_[i][0],g.mu_[i][1],a=np.sqrt(e_val[0]),
-                              b=np.sqrt(e_val[1]),ax1 = e_vec[:,0], ax2=e_vec[:,1])
-            fig.add_trace(go.Line(x=e_x, y=e_y),row=1, col=2)
+            # e_val,e_vec = np.linalg.eig(g.vars_[i])
+            # e_x,e_y = ellipse(g.mu_[i][0],g.mu_[i][1],a=np.sqrt(e_val[0]),
+            #                   b=np.sqrt(e_val[1]),ax1 = e_vec[:,0], ax2=e_vec[:,1])
+            fig.add_trace(get_ellipse(g.mu_[i],g.vars_[i]),row=1, col=2)
         fig.update_layout(title_text="LDA and GNB prediction, dataset: "
                                      ""+str(f),
                           showlegend=False)
         fig.show()
 
 
-def ellipse(x_center=0, y_center=0, ax1=[1, 0], ax2=[0, 1], a=1, b=1, N=100):
-    # x_center, y_center the coordinates of ellipse center
-    # ax1 ax2 two orthonormal vectors representing the ellipse axis directions
-    # a, b the ellipse parameters
-    if not ((np.isclose(np.linalg.norm(ax1),1) and np.isclose(np.linalg.norm(
-            ax2),1))):
-        raise ValueError('ax1, ax2 must be unit vectors')
-    if abs(np.dot(ax1, ax2)) > 1e-06:
-        raise ValueError('ax1, ax2 must be orthogonal vectors')
-    # rotation matrix
-    R = np.array([ax1, ax2]).T
-    if np.linalg.det(R) < 0:
-        raise ValueError(
-            "the det(R) must be positive to get a  positively oriented ellipse reference frame")
-    t = np.linspace(0, 2 * np.pi, N)
-    # ellipse parameterization with respect to a system of axes of directions a1, a2
-    xs = 2*a * np.cos(t)
-    ys = 2*b * np.sin(t)
-
-    # coordinate of the  ellipse points with respect to the system of axes [1, 0], [0,1] with origin (0,0)
-    xp, yp = np.dot(R, [xs, ys])
-    x = xp + x_center
-    y = yp + y_center
-    return x, y
+# def ellipse(x_center=0, y_center=0, ax1=[1, 0], ax2=[0, 1], a=1, b=1, N=100):
+#     # x_center, y_center the coordinates of ellipse center
+#     # ax1 ax2 two orthonormal vectors representing the ellipse axis directions
+#     # a, b the ellipse parameters
+#     if not ((np.isclose(np.linalg.norm(ax1),1) and np.isclose(np.linalg.norm(
+#             ax2),1))):
+#         raise ValueError('ax1, ax2 must be unit vectors')
+#     if abs(np.dot(ax1, ax2)) > 1e-06:
+#         raise ValueError('ax1, ax2 must be orthogonal vectors')
+#     # rotation matrix
+#     R = np.array([ax1, ax2]).T
+#     if np.linalg.det(R) < 0:
+#         raise ValueError(
+#             "the det(R) must be positive to get a  positively oriented ellipse reference frame")
+#     t = np.linspace(0, 2 * np.pi, N)
+#     # ellipse parameterization with respect to a system of axes of directions a1, a2
+#     xs = 2*a * np.cos(t)
+#     ys = 2*b * np.sin(t)
+#
+#     # coordinate of the  ellipse points with respect to the system of axes [1, 0], [0,1] with origin (0,0)
+#     xp, yp = np.dot(R, [xs, ys])
+#     x = xp + x_center
+#     y = yp + y_center
+#     return x, y
 if __name__ == '__main__':
     np.random.seed(0)
     run_perceptron()
