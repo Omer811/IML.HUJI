@@ -24,18 +24,6 @@ pio.templates.default = "simple_white"
 NUM_OF_CLUSTERS = 18
 
 
-def __make_timestamp(time_str: str) -> float:
-    if type(time_str) != str:
-        return 0
-    formatted_time = f"{time_str[:4]}/{time_str[4:6]}/{time_str[6:8]}"
-    ret_val = 0.0
-    try:
-        ret_val = time.mktime(datetime.datetime.strptime(formatted_time,
-                                                         "%Y/%m/%d").timetuple())
-    except ValueError:
-        return 0
-    return ret_val
-
 
 def __cluster_location(df: pd.DataFrame):
     kmeans = KMeans(n_clusters=NUM_OF_CLUSTERS, init='k-means++')
@@ -65,14 +53,11 @@ def load_data(filename: str):
     df = df.drop_duplicates()
     df = df.dropna()
     df = df.drop(df[(df["price"] < 0) | (df["bedrooms"] < 0) | (df[
-                                                                    "sqft_living"] < MIN_LIVING_SQFT) | (
-                                df["sqft_lot"] < MIN_LIVING_LOT) |
+              "sqft_living"] < MIN_LIVING_SQFT) | (df["sqft_lot"] < MIN_LIVING_LOT) |
                     (df["floors"] < MIN_FLOORS)].index)
-    df["date"] = df["date"].apply(__make_timestamp)
     df["is_renovated"] = df["yr_renovated"].apply(lambda x: 1 if x > 0 else 0)
 
-    if len(data[
-               "zipcode"].unique()) > 100:  # decide what describes the location
+    if len(df["zipcode"].unique()) > 100:  # decide what describes the location
         # better
         __cluster_location(df)
         df = df.join(pandas.get_dummies(df["cluster_label"], prefix="cluster"))
@@ -117,18 +102,12 @@ def feature_evaluation(X: pd.DataFrame, y: pd.Series,
                          title="Price ""against " + column + " \nPearson "
                                                              "correlation: " + str(
                              pear_corr[column]))
-        # fig.show()
         fig.write_image(output_path + "/scatter_" + column + PLOT_FILE_FORMAT)
     print("min: " + pear_corr.idxmin(axis=1) + " max: " + pear_corr.idxmax(
-        axis=1))
+        axis=1))#todo: delete before submission
 
 
-def __calculate_haversine(long, lat):
-    a = np.power(np.sin(lat / 2), 2) + np.cos(0) * np.cos(lat) * np.power(
-        np.sin(
-            long / 2), 2)
-    c = 2 * np.power(np.arctan2(np.sqrt(a), np.sqrt(1 - a)), 2)
-    return EARTH_RAD * c
+
 
 
 def __calculate_pearson_correlation(feature: pd.Series,

@@ -2,7 +2,7 @@ from typing import NoReturn
 from ...base import BaseEstimator
 import numpy as np
 from numpy.linalg import det, inv
-
+from ...metrics.loss_functions import misclassification_error
 
 class LDA(BaseEstimator):
     """
@@ -23,7 +23,7 @@ class LDA(BaseEstimator):
         The inverse of the estimated features covariance. To be set in `LDA.fit`
 
     self.pi_: np.ndarray of shape (n_classes)
-        The estimated class probabilities. To be set in `GaussianNaiveBayes.fit`
+        The estimated class probabilities. To be set in `LDA.fit`
     """
     def __init__(self):
         """
@@ -31,6 +31,7 @@ class LDA(BaseEstimator):
         """
         super().__init__()
         self.classes_, self.mu_, self.cov_, self._cov_inv, self.pi_ = None, None, None, None, None
+
 
     def _fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
         """
@@ -46,7 +47,23 @@ class LDA(BaseEstimator):
         y : ndarray of shape (n_samples, )
             Responses of input data to fit to
         """
-        raise NotImplementedError()
+        self.classes_ = np.unique(y)
+        self.pi_ = np.zeros_like(self.classes_)
+        self.mu_ = np.zeros((self.classes_.size,X.shape[1]))
+        for i in range (self.classes_.size):
+            diff = y==self.classes_[i]
+            nk = np.count_nonzero(diff)
+            self.pi_[i] = float(nk/y.size)
+            self.mu_[i] = (X[diff]).mean(axis=0)
+        indexed_y = np.searchsorted(self.classes_,y)
+        mu_vec = self.mu_[indexed_y]
+        x_mu = (X-mu_vec)
+
+        self.cov_ = np.matmul(x_mu.T, x_mu, axes=[(0, 1), (0, 1), (-2,
+                         -1)])/(X.shape[0]-self.classes_.size)
+        self._cov_inv = np.linalg.pinv(self.cov_)
+        print ("hi")
+
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -62,7 +79,7 @@ class LDA(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        raise NotImplementedError()
+        return self.classes_[np.argmax(self.likelihood(X),axis=1)]
 
     def likelihood(self, X: np.ndarray) -> np.ndarray:
         """
@@ -82,7 +99,14 @@ class LDA(BaseEstimator):
         if not self.fitted_:
             raise ValueError("Estimator must first be fitted before calling `likelihood` function")
 
-        raise NotImplementedError()
+        a = np.matmul(self._cov_inv, self.mu_.T,
+                      axes=[(0, 1), (0, 1), (-1, -2)])
+        b = np.log(self.pi_) - 0.5 * np.diag(
+            np.matmul(self.mu_, a.T, axes=[(0, 1), (0, 1), (-2, -1)]))
+        classification = np.zeros((X.shape[0], self.classes_.size))
+        for i in range(self.classes_.size):
+            classification[:, i] = a[i] @ X.T + b[i]
+        return classification
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
@@ -101,4 +125,4 @@ class LDA(BaseEstimator):
         loss : float
             Performance under missclassification loss function
         """
-        raise NotImplementedError()
+        return misclassification_error(y,self.predict(X))

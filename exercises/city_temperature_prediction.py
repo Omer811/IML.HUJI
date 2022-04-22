@@ -1,7 +1,7 @@
 import IMLearn.learners.regressors.linear_regression
 from IMLearn.learners.regressors import PolynomialFitting
 from IMLearn.utils import split_train_test
-
+from IMLearn.metrics.loss_functions import mean_square_error
 import numpy as np
 import pandas as pd
 import plotly.express as px
