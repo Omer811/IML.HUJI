@@ -48,12 +48,12 @@ class LDA(BaseEstimator):
             Responses of input data to fit to
         """
         self.classes_ = np.unique(y)
-        self.pi_ = np.zeros_like(self.classes_)
+        self.pi_ = np.zeros_like(self.classes_,dtype=float)
         self.mu_ = np.zeros((self.classes_.size,X.shape[1]))
         for i in range (self.classes_.size):
             diff = y==self.classes_[i]
             nk = np.count_nonzero(diff)
-            self.pi_[i] = float(nk/y.size)
+            self.pi_[i] = float(nk)/y.size
             self.mu_[i] = (X[diff]).mean(axis=0)
         indexed_y = np.searchsorted(self.classes_,y)
         mu_vec = self.mu_[indexed_y]
@@ -62,7 +62,6 @@ class LDA(BaseEstimator):
         self.cov_ = np.matmul(x_mu.T, x_mu, axes=[(0, 1), (0, 1), (-2,
                          -1)])/(X.shape[0]-self.classes_.size)
         self._cov_inv = np.linalg.pinv(self.cov_)
-        print ("hi")
 
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
