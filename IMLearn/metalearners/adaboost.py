@@ -54,30 +54,6 @@ class AdaBoost(BaseEstimator):
             self.D_ *= np.exp((-1) * self.weights_[i] * np.sign(y) * y_pred)
             self.D_ /= np.sum(self.D_)
 
-    # def _fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
-    #     """
-    #     Fit an AdaBoost classifier over given samples
-    #
-    #     Parameters
-    #     ----------
-    #     X : ndarray of shape (n_samples, n_features)
-    #         Input data to fit an estimator for
-    #
-    #     y : ndarray of shape (n_samples, )
-    #         Responses of input data to fit to
-    #     """
-    #     self.D_ = np.ones(X.shape[0])/X.shape[0]
-    #     self.models_ = []
-    #     self.weights_ =[]
-    #     for i in range(self.iterations_):
-    #         self.models_.append(self.wl_())
-    #         self.models_[-1].fit(X, y*self.D_)
-    #         miss_class = np.sum(self.D_[y != self.models_[-1].predict(X)])
-    #         self.weights_.append(0.5*np.log(1/miss_class-1))
-    #         self.D_ = self.D_ * np.exp(-self.weights_[-1]*np.sign(y)*np.sign(
-    #             self.models_[-1].predict(X)))
-    #         self.D_ /= np.sum(self.D_,axis=0)
-    #     self.weights_ = np.array(self.weights_)
 
     def _predict(self, X):
         """

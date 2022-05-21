@@ -98,13 +98,14 @@ def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000, test_size=
                             f"accuracy:{1-a_boost.partial_loss(test_X,test_y,best_size)}")
     fig.show()
     # Question 4: Decision surface with weighted samples
-    normalized_d = (a_boost.D_/np.max(a_boost.D_))*10
+    normalized_d = (a_boost.D_/np.max(a_boost.D_))*20
     fig = go.Figure()
     fig.add_traces([decision_surface(lambda X: a_boost.partial_predict(
         X, n_learners), lims[0], lims[1], showscale=False),
-                    go.Scatter(x=test_X[:, 0], y=test_X[:, 1], mode="markers",
+                    go.Scatter(x=train_X[:, 0], y=train_X[:, 1],
+                               mode="markers",
                                showlegend=False,
-                               marker=dict(color=test_y, symbol=symbols[
+                               marker=dict(color=train_y, symbol=symbols[
                                    test_y.astype(int)],size=normalized_d,
                                            colorscale=[custom[0], custom[-1]],
                                            line=dict(color="black",
@@ -115,6 +116,6 @@ def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000, test_size=
 
 if __name__ == '__main__':
     np.random.seed(0)
-    #fit_and_evaluate_adaboost(0)
+    fit_and_evaluate_adaboost(0)
     fit_and_evaluate_adaboost(0.4)
 
