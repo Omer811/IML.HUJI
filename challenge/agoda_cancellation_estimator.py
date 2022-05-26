@@ -1,8 +1,13 @@
 from __future__ import annotations
 from typing import NoReturn
+
+import pandas as pd
+
 from IMLearn.base import BaseEstimator
 import numpy as np
-
+from sklearn.ensemble import GradientBoostingClassifier,AdaBoostClassifier,HistGradientBoostingClassifier
+from IMLearn.metrics import mean_square_error
+from datetime import time
 
 class AgodaCancellationEstimator(BaseEstimator):
     """
@@ -22,6 +27,8 @@ class AgodaCancellationEstimator(BaseEstimator):
 
         """
         super().__init__()
+        self.g = GradientBoostingClassifier()
+        self.a = AdaBoostClassifier(algorithm="SAMME")
 
     def _fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
         """
@@ -39,7 +46,11 @@ class AgodaCancellationEstimator(BaseEstimator):
         -----
 
         """
-        pass
+
+        # self.h = HistGradientBoostingClassifier(categorical_features=)
+
+        # self.g.fit(X,y)
+        self.a.fit(X,y)
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -55,7 +66,17 @@ class AgodaCancellationEstimator(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        return np.zeros(X.shape[0])
+        pred =  list(self.a.predict(X))
+        print(sorted(pred))
+        for i in range(len(pred)):
+            pred[i] = self.is_in_bound(pred[i])
+
+        return np.array(pred)
+
+
+    def is_in_bound(self, date):
+        return date>=np.datetime64("2018-12-07")\
+               and  date<=np.datetime64("2018-12-13")
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
@@ -74,4 +95,4 @@ class AgodaCancellationEstimator(BaseEstimator):
         loss : float
             Performance under loss function
         """
-        pass
+        return mean_square_error(self.a.predict(X),y)

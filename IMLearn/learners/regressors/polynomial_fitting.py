@@ -33,6 +33,7 @@ class PolynomialFitting(BaseEstimator):
         y : ndarray of shape (n_samples, )
             Responses of input data to fit to
         """
+        y=y.reshape(-1)
         vander = self.__transform(X)
         self.lin_reg.fit(vander,y)
 
