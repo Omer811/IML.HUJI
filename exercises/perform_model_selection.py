@@ -103,7 +103,6 @@ def select_regularization_parameter(n_samples: int = 50,
     """
     # Question 6 - Load diabetes dataset and split into training and testing portions
     X,y = datasets.load_diabetes(return_X_y=True)
-    # X, y = datasets.load_iris(return_X_y=True)
     X_train,y_train = X[:n_samples],y[:n_samples]
     X_test,y_test = X[n_samples:],y[n_samples:]
 
@@ -116,7 +115,6 @@ def select_regularization_parameter(n_samples: int = 50,
     model_count = len(models)
     models_train_error = np.empty((model_count, n_evaluations))
     models_validation_error = np.empty((model_count, n_evaluations))
-    #models_coef = np.empty((model_count,n_evaluations,X.shape[1]))
     for model in range(model_count):
         for i in range(n_evaluations):
 
@@ -125,18 +123,7 @@ def select_regularization_parameter(n_samples: int = 50,
                     m, X_train, y_train, mean_square_error,5)
             models_train_error[model, i] = train_error
             models_validation_error[model, i] = validation_error
-            # if models_name[model] == "Ridge":
-            #     models_coef[model,i] = m.coefs_
-            # else:
-            #     models_coef[model, i] = m.coef_
-    # fig = go.Figure()
-    # for model in range(model_count):
-    #     for coef in range(1,2):
-    #      fig.add_trace(go.Scatter(x=lam, y=models_coef[model,:,coef],
-    #                              name=f"coef {coef} on {models_name[model]}",
-    #                              mode="lines+markers",
-    #                              showlegend=True))
-    # fig.show()
+
     fig = go.Figure()
     for model in range(model_count):
         fig.add_trace(go.Scatter(x=lam, y=models_train_error[model],
@@ -181,7 +168,7 @@ def select_regularization_parameter(n_samples: int = 50,
 
 if __name__ == '__main__':
     np.random.seed(0)
-    select_polynomial_degree()
+    # select_polynomial_degree()
     # select_polynomial_degree(100,noise=5)
     # select_polynomial_degree(100,noise=0)
     # select_polynomial_degree(1500,noise=10)

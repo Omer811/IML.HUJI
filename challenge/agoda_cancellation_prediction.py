@@ -27,8 +27,8 @@ def load_data(filename: str):
     full_data["checkin_date"] = pd.to_datetime(full_data["checkin_date"])
     full_data["checkout_date"] = pd.to_datetime(full_data["checkout_date"])
     full_data["hotel_live_date"] = pd.to_datetime(full_data["hotel_live_date"])
-    full_data["cancellation_datetime"] = pd.to_datetime(
-        full_data["cancellation_datetime"])
+    # full_data["cancellation_datetime"] = pd.to_datetime(
+    #     full_data["cancellation_datetime"])
 
     full_data["data_diff"] = (full_data["cancellation_datetime"] - full_data[
         "booking_datetime"]).astype('timedelta64[D]')
@@ -112,7 +112,9 @@ if __name__ == '__main__':
     estimator = AgodaCancellationEstimator().fit(train_X, train_y)
 
     # Store model predictions over test set
-    evaluate_and_export(estimator, test_X, "id1_id2_id3.csv")
+    test7 = load_data("test_set_week_7.csv")
+    evaluate_and_export(estimator, test7, "207172297_207902966_208747287.csv")
+
 
     pred = estimator.predict(test_X)
     print()
