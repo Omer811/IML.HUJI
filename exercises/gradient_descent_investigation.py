@@ -2,13 +2,14 @@ import numpy as np
 import pandas as pd
 from typing import Tuple, List, Callable, Type
 
-from IMLearn import BaseModule
+from IMLearn import BaseModule, BaseLR
 from IMLearn.desent_methods import GradientDescent, FixedLR, ExponentialLR
 from IMLearn.desent_methods.modules import L1, L2
 from IMLearn.learners.classifiers.logistic_regression import LogisticRegression
 from IMLearn.utils import split_train_test
 
 import plotly.graph_objects as go
+import plotly.io as pio
 
 
 def plot_descent_path(module: Type[BaseModule],
@@ -76,9 +77,53 @@ def get_gd_state_recorder_callback() -> Tuple[Callable[[], None], List[np.ndarra
     raise NotImplementedError()
 
 
+def run_gd(eta,model_type:Type[BaseModule],title:str,f: BaseModule,
+           learning_rate: BaseLR = FixedLR(1e-3),
+                 tol: float = 1e-5,
+                 max_iter: int = 1000,
+                 out_type: str = "last")->(go.Figure,go.Figure):
+    losses_ = np.empty(max_iter+1)
+    weights_ = np.empty((max_iter+1, f.shape[0]))
+    losses_[0] = f.compute_output()
+    weights_[0] = f.weights
+    cur_t = [0]
+    def callback_func(solver, weights, val, grad, t, eta, delta):
+        losses_[t+1] = val
+        weights_[t+1] = weights
+        cur_t[0] = t
+    gd = GradientDescent(learning_rate=FixedLR(eta),tol=tol,
+                         max_iter=max_iter,out_type=out_type,
+                         callback=callback_func)
+    gd.fit(f,None,None)
+    losses_ = losses_[:cur_t[0]+2]
+    weights_ = weights_[:cur_t[0]+2]
+
+    descent = plot_descent_path(model_type,weights_,title=title+f" iteration: "
+                                                          f"{cur_t[0]}")
+    conv = go.Scatter(x=np.arange(losses_.size),y=losses_)
+
+    return descent,conv
+
+
 def compare_fixed_learning_rates(init: np.ndarray = np.array([np.sqrt(2), np.e / 3]),
-                                 etas: Tuple[float] = (1, .1, .01, .001)):
-    raise NotImplementedError()
+                                 etas: Tuple[float] = (1, .1, .01,
+                                                       .001)):
+    models = [L1,L2]
+    models_text = ["L1","L2"]
+    losses = go.Figure()
+    losses.layout.title = "convergence"
+    for i in range(len(models)):
+        for eta in etas:
+            f = models[i](init)
+            descent,conv = run_gd(model_type=models[i],eta = eta,
+                          title=f"Plot for {models_text[i]} with eta ="
+                                  f" {eta}",f=f)
+            descent.write_image(f"graphs/{models_text[i]}_{eta}.png")
+            conv.name= f"{models_text[i]} with eta = {eta}"
+            losses.add_trace(conv)
+            losses.write_image("graphs/conv.png")
+
+
 
 
 def compare_exponential_decay_rates(init: np.ndarray = np.array([np.sqrt(2), np.e / 3]),

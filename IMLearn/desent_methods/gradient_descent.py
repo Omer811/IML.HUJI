@@ -39,12 +39,14 @@ class GradientDescent:
         Callable function receives as input any argument relevant for the current GD iteration. Arguments
         are specified in the `GradientDescent.fit` function
     """
+
     def __init__(self,
                  learning_rate: BaseLR = FixedLR(1e-3),
                  tol: float = 1e-5,
                  max_iter: int = 1000,
                  out_type: str = "last",
-                 callback: Callable[[GradientDescent, ...], None] = default_callback):
+                 callback: Callable[
+                     [GradientDescent, ...], None] = default_callback):
         """
         Instantiate a new instance of the GradientDescent class
 
@@ -105,12 +107,12 @@ class GradientDescent:
         following named arguments:
             - solver: GradientDescent
                 self, the current instance of GradientDescent
-            - weights: ndarray of shape specified by module's weights
+            - weights: ndarray of shape specified by module'cur_score weights
                 Current weights of objective
-            - val: ndarray of shape specified by module's compute_output function
+            - val: ndarray of shape specified by module'cur_score compute_output function
                 Value of objective function at current point, over given data X, y
-            - grad:  ndarray of shape specified by module's compute_jacobian function
-                Module's jacobian with respect to the weights and at current point, over given data X,y
+            - grad:  ndarray of shape specified by module'cur_score compute_jacobian function
+                Module'cur_score jacobian with respect to the weights and at current point, over given data X,y
             - t: int
                 Current GD iteration
             - eta: float
@@ -119,4 +121,46 @@ class GradientDescent:
                 Euclidean norm of w^(t)-w^(t-1)
 
         """
-        raise NotImplementedError()
+        prev_w = None
+        cur_w = f.weights
+        best_w = cur_w.copy()
+        best_w_score = f.compute_output()
+        avg_w = cur_w.copy()
+        iter_num = 0
+        while iter_num < self.max_iter_ and (prev_w is None or
+                                             self.compute_delta(prev_w,
+                                                                cur_w) > self.tol_):
+            prev_w = cur_w.copy()
+            cur_w = cur_w + \
+                    self.learning_rate_.lr_step(
+                        t=iter_num) * -f.compute_jacobian()
+            f.weights = cur_w
+            cur_score = f.compute_output()
+            avg_w, best_w, best_w_score = self.update_weights(avg_w, best_w,
+                                                              best_w_score,
+                                                              cur_w, cur_score)
+            self.callback_(solver=self, weights=cur_w, val=cur_score,
+                           grad=f.compute_jacobian(), t=iter_num,
+                           eta=self.learning_rate_.lr_step(t=iter_num),
+                           delta=self.compute_delta(prev_w, cur_w))
+            iter_num += 1
+        if self.out_type_ == 'best':
+            return best_w
+        if self.out_type_ == "average":
+            return avg_w / iter_num
+        if self.out_type_ == 'last':
+            return f.weights
+
+    def update_weights(self, avg_w, best_w, best_w_score, cur_w, s):
+        updated_score = best_w_score
+        if self.out_type_ == 'best':
+            if s < best_w_score:
+                updated_score = s
+                best_w = cur_w.copy()
+        if self.out_type_ == "average":
+            avg_w += cur_w
+        return avg_w, best_w, updated_score
+
+    def compute_delta(self, prev_w, cur_w):
+        if prev_w is None: return True
+        return np.linalg.norm(cur_w-prev_w, ord=2)
