@@ -37,6 +37,8 @@ def misclassification_error(y_true: np.ndarray, y_pred: np.ndarray,
     -------
     Misclassification of given predictions
     """
+    y_true = y_true.reshape(-1)
+    y_pred = y_pred.reshape(-1)
     diff = (y_true == y_pred)
     wrong_classifications = y_true.size - np.count_nonzero(diff)
     return float(wrong_classifications/y_true.size if normalize else \
