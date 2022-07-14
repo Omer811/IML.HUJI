@@ -4,6 +4,7 @@ from typing import Tuple, Callable
 import numpy as np
 from IMLearn import BaseEstimator
 
+
 def cross_validate(estimator: BaseEstimator, X: np.ndarray, y: np.ndarray,
                    scoring: Callable[[np.ndarray, np.ndarray, ...], float], cv: int = 5) -> Tuple[float, float]:
     """
@@ -36,21 +37,17 @@ def cross_validate(estimator: BaseEstimator, X: np.ndarray, y: np.ndarray,
     validation_score: float
         Average validation score over folds
     """
-    x_ind = np.arange(X.shape[0])
-    split = np.array_split(x_ind,cv)
-    validate_error = []
-    train_error = []
+    ids = np.arange(X.shape[0])
 
-    for i in range(cv):
-        cur_data_ind = np.concatenate(split[:i] + split[i+1:], axis=0)
-        cur_train_X = X[cur_data_ind]
-        cur_train_y = y[cur_data_ind].reshape(-1,1)
-        estimator.fit(cur_train_X,cur_train_y)
-        y_pred_fold = estimator.predict(X[split[i]])
-        validate_error.append(scoring(y_pred_fold,y[split[i]]))
-        y_pred_train = estimator.predict(cur_train_X)
-        train_error.append(scoring(cur_train_y.reshape(-1),y_pred_train))
+    # Randomly split samples into `cv` folds
+    folds = np.array_split(ids, cv)
 
-    validate_error =np.array(validate_error)
-    train_error = np.array(train_error)
-    return validate_error.mean() ,train_error.mean()
+    train_score, validation_score = .0, .0
+    for fold_ids in folds:
+        train_msk = ~np.isin(ids, fold_ids)
+        fit = deepcopy(estimator).fit(X[train_msk], y[train_msk])
+
+        train_score += scoring(y[train_msk], fit.predict(X[train_msk]))
+        validation_score += scoring(y[fold_ids], fit.predict(X[fold_ids]))
+
+    return train_score / cv, validation_score / cv
